@@ -1,0 +1,997 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Jargon-Buster Optimizer — v0.2 (Authority MVP)</title>
+  <style>
+    :root{
+      --bg:#0b0f17;
+      --text:#e7edf7;
+      --muted:#9aa7bd;
+      --good:#2ad17a;
+      --warn:#ffbf3c;
+      --bad:#ff4d5e;
+      --shadow: 0 14px 40px rgba(0,0,0,.38);
+      --radius: 18px;
+      --accent1: rgba(34,197,94,.22);
+      --accent2: rgba(255,153,0,.18);
+      --border: rgba(120,160,255,.14);
+      --border2: rgba(120,160,255,.22);
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+      background:
+        radial-gradient(1200px 700px at 15% 10%, var(--accent1), transparent 55%),
+        radial-gradient(900px 500px at 90% 15%, var(--accent2), transparent 60%),
+        var(--bg);
+      color:var(--text);
+    }
+    .wrap{max-width: 1240px; margin: 0 auto; padding: 26px 16px 64px;}
+    header{display:flex; align-items:flex-start; justify-content:space-between; gap:14px; margin-bottom: 14px;}
+    .brand{display:flex; flex-direction:column; gap:8px;}
+    .brand h1{margin:0; font-size: 22px; letter-spacing:.2px;}
+    .brand p{margin:0; color:var(--muted); font-size: 13px; line-height:1.45; max-width: 820px;}
+    .topActions{display:flex; gap:10px; flex-wrap:wrap; justify-content:flex-end; align-items:center;}
+    .pill{
+      padding:8px 12px; border-radius:999px;
+      background: rgba(20,34,59,.55);
+      border:1px solid var(--border);
+      color: var(--muted);
+      font-size:12px;
+      user-select:none;
+      backdrop-filter: blur(10px);
+    }
+    .grid{display:grid; grid-template-columns: 1.05fr .95fr; gap: 16px; margin-top: 10px;}
+    @media (max-width: 980px){ .grid{grid-template-columns: 1fr;} }
+    .card{
+      background: linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.01));
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow:hidden;
+    }
+    .cardHeader{
+      padding: 14px 16px;
+      display:flex; align-items:center; justify-content:space-between; gap:12px;
+      border-bottom: 1px solid rgba(120,160,255,.12);
+      background: rgba(12,19,32,.55);
+      backdrop-filter: blur(10px);
+    }
+    .cardHeader h2{margin:0; font-size: 14px; letter-spacing:.2px; color: #dce6ff;}
+    .body{padding: 14px 16px 16px;}
+    textarea{
+      width:100%; min-height: 320px; resize: vertical;
+      background: rgba(10,16,28,.6);
+      color: var(--text);
+      border:1px solid var(--border);
+      border-radius: 14px;
+      padding: 12px;
+      line-height:1.6;
+      font-size: 13px;
+      outline:none;
+    }
+    textarea:focus{border-color: rgba(34,197,94,.35); box-shadow: 0 0 0 4px rgba(34,197,94,.08);}
+    button, select{
+      border: 1px solid rgba(120,160,255,.18);
+      background: rgba(20,34,59,.7);
+      color: var(--text);
+      padding: 9px 12px;
+      border-radius: 12px;
+      font-size: 12px;
+      cursor:pointer;
+      transition: transform .08s ease, border-color .2s ease, background .2s ease;
+      user-select:none;
+    }
+    button:hover{transform: translateY(-1px); border-color: rgba(120,160,255,.38);}
+    button:active{transform: translateY(0px);}
+    button.primary{
+      background: linear-gradient(135deg, rgba(34,197,94,.25), rgba(255,153,0,.18));
+      border-color: rgba(34,197,94,.35);
+    }
+    button.danger{background: rgba(255,77,94,.12); border-color: rgba(255,77,94,.3);}
+    button.ghost{background: rgba(20,34,59,.35);}
+    .row{display:flex; gap:10px; flex-wrap:wrap; align-items:center; justify-content:space-between;}
+    .scoreGrid{display:grid; grid-template-columns: 1.2fr .8fr; gap:12px; margin-top: 12px;}
+    @media (max-width: 520px){ .scoreGrid{grid-template-columns: 1fr;} }
+    .scoreBox{
+      background: rgba(10,16,28,.55);
+      border:1px solid var(--border);
+      border-radius: 14px;
+      padding: 12px;
+      display:flex; align-items:center; justify-content:space-between; gap:12px;
+    }
+    .scoreLeft{display:flex; flex-direction:column; gap:4px;}
+    .scoreLabel{font-size:12px; color: var(--muted);}
+    .scoreVal{font-size: 22px; font-weight: 760; letter-spacing: .2px; display:flex; align-items:baseline; gap:8px;}
+    .scoreVal span{font-size: 12px; color: var(--muted); font-weight: 650;}
+    .bar{
+      width: 44%; min-width: 160px; height: 10px; border-radius: 999px;
+      background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.08); overflow:hidden;
+    }
+    .barFill{
+      height: 100%; width: 0%;
+      border-radius: 999px;
+      transition: width .35s ease;
+      background: linear-gradient(90deg, var(--bad), var(--warn), var(--good));
+    }
+    .mini{
+      background: rgba(10,16,28,.55);
+      border:1px solid var(--border);
+      border-radius: 14px;
+      padding: 10px 12px;
+    }
+    .kpi{display:flex; justify-content:space-between; gap:10px; align-items:center; padding: 6px 0; border-bottom: 1px dashed rgba(120,160,255,.12);}
+    .kpi:last-child{border-bottom:none}
+    .kpi .name{font-size:12px; color: var(--muted);}
+    .kpi .val{font-size:12px; font-weight:700; color: #dfe8ff;}
+    .tabs{display:flex; gap:10px; flex-wrap:wrap; margin-top: 12px;}
+    .tabBtn{padding: 9px 12px; border-radius: 999px; border:1px solid var(--border); background: rgba(20,34,59,.35); color: var(--muted);}
+    .tabBtn.active{background: rgba(20,34,59,.75); color: var(--text); border-color: var(--border2);}
+    .panel{margin-top: 12px; background: rgba(10,16,28,.55); border:1px solid var(--border); border-radius: 14px; padding: 12px;}
+    .analysis{max-height: 360px; overflow:auto; padding-right: 6px;}
+    .analysis p{margin: 0 0 10px; font-size: 13px; line-height: 1.65; color: #dfe8ff; white-space: pre-wrap;}
+    .muted{color: var(--muted); font-size: 12px; line-height:1.45; margin:0;}
+    .hint{margin-top:10px; color: var(--muted); font-size: 12px; line-height:1.45;}
+    mark{padding: 2px 4px; border-radius: 6px; color: #0b0f17;}
+    mark.jargon{ background: rgba(255,191,60,.95); }
+    mark.passive{ background: rgba(255,77,94,.92); }
+    mark.long{ background: rgba(42,209,122,.92); }
+    mark.vague{ background: rgba(145, 202, 255, .92); }
+    mark.conf{ background: rgba(210, 255, 120, .92); }
+    .legend{display:flex; gap:10px; flex-wrap:wrap; margin-top: 10px; color: var(--muted); font-size:12px; align-items:center;}
+    .legendItem{display:flex; gap:8px; align-items:center; padding: 6px 10px; border:1px solid rgba(120,160,255,.12); border-radius: 999px; background: rgba(20,34,59,.35);}
+    .issues{display:flex; flex-direction:column; gap:10px; max-height: 360px; overflow:auto; padding-right: 6px;}
+    .issue{border: 1px solid rgba(120,160,255,.16); border-radius: 14px; padding: 10px; background: rgba(15,22,36,.55); cursor:pointer; transition: border-color .2s ease, transform .08s ease;}
+    .issue:hover{border-color: rgba(120,160,255,.32); transform: translateY(-1px);}
+    .issueTop{display:flex; align-items:center; justify-content:space-between; gap:10px;}
+    .badge{font-size: 11px; padding: 5px 9px; border-radius: 999px; border:1px solid rgba(120,160,255,.18); background: rgba(20,34,59,.45); color: var(--muted); user-select:none;}
+    .sevHigh{border-color: rgba(255,77,94,.4); color:#ffd0d6;}
+    .sevMed{border-color: rgba(255,191,60,.35); color:#ffe8bf;}
+    .sevLow{border-color: rgba(42,209,122,.28); color:#c9ffe4;}
+    .issueTitle{font-size: 12px; font-weight: 750; color:#e7edf7; margin:0;}
+    .issueDesc{margin:8px 0 0; font-size: 12px; color: rgba(231,237,247,.86); line-height:1.5;}
+    .issueFix{margin:8px 0 0; font-size: 12px; color:#e7edf7; line-height:1.5;}
+    .issueFix b{color:#cfe2ff}
+    .tiny{font-size: 11px; color: var(--muted);}
+    .rewriteItem{border: 1px dashed rgba(120,160,255,.18); border-radius: 12px; padding: 10px; margin-bottom: 10px; background: rgba(15,22,36,.55);}
+    .rewriteItem:last-child{margin-bottom:0}
+    .rewriteItem .old{color: rgba(231,237,247,.78); font-size:12px; margin-bottom: 8px;}
+    .rewriteItem .new{color: #e7edf7; font-size:13px; font-weight: 720; line-height:1.55;}
+    .codeLike{
+      background: rgba(8,12,20,.7);
+      border: 1px solid rgba(120,160,255,.14);
+      border-radius: 14px;
+      padding: 12px;
+      color: #eaf1ff;
+      font-size: 12px;
+      line-height: 1.6;
+      white-space: pre-wrap;
+    }
+    .divider{height:1px; background: rgba(120,160,255,.12); margin: 10px 0;}
+    @media print{
+      body{background:#fff; color:#111;}
+      .wrap{max-width: 100%; padding: 0;}
+      header,.noPrint{display:none !important;}
+      .card{box-shadow:none; border:1px solid #ddd;}
+      .cardHeader{background:#f4f6fb; color:#111;}
+      .panel,.mini,.scoreBox,textarea,.analysis,.issues,.codeLike{background:#fff !important; color:#111 !important;}
+      mark{background: #ffeb99 !important; color:#111 !important;}
+      .badge{border-color:#bbb !important; color:#111 !important;}
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header class="noPrint">
+      <div class="brand">
+        <h1>Jargon-Buster Optimizer 🧼 — v0.2</h1>
+        <p>Authority MVP engine: real scoring, issue diagnosis with fixes, rewrite modes, structure builder, proof suggestions, printable report.</p>
+      </div>
+      <div class="topActions">
+        <div class="pill">⚡ Authority MVP</div>
+        <div class="pill">🧾 Print-to-PDF</div>
+        <div class="pill">🧪 No API</div>
+      </div>
+    </header>
+
+    <div class="grid">
+      <section class="card">
+        <div class="cardHeader noPrint">
+          <h2>1) Listing Input</h2>
+          <div class="row" style="justify-content:flex-end; flex:0;">
+            <select id="modeSelect" title="Rewrite mode">
+              <option value="friendly">Simple & Friendly</option>
+              <option value="premium">Premium & Polished</option>
+              <option value="bold">Bold & Direct</option>
+              <option value="etsy">Etsy Story Style</option>
+              <option value="shopify">Shopify Bullet Style</option>
+            </select>
+            <button id="btnExample">Load Example</button>
+            <button id="btnClear" class="danger">Clear</button>
+          </div>
+        </div>
+        <div class="body">
+          <textarea id="inputText" placeholder="Paste your product description here..."></textarea>
+
+          <div class="scoreGrid">
+            <div class="scoreBox">
+              <div class="scoreLeft">
+                <div class="scoreLabel">Clarity Score</div>
+                <div class="scoreVal"><span id="scoreNum">—</span><span>/100</span></div>
+                <div class="muted" id="scoreNote">Run an audit to generate a report.</div>
+              </div>
+              <div class="bar"><div id="scoreFill" class="barFill"></div></div>
+            </div>
+
+            <div class="mini">
+              <div class="kpi"><div class="name">Readability (Flesch)</div><div class="val" id="kpiFlesch">—</div></div>
+              <div class="kpi"><div class="name">Grade (est.)</div><div class="val" id="kpiGrade">—</div></div>
+              <div class="kpi"><div class="name">Benefit ratio</div><div class="val" id="kpiBenefit">—</div></div>
+              <div class="kpi"><div class="name">You-language</div><div class="val" id="kpiYou">—</div></div>
+              <div class="kpi"><div class="name">Trust signals</div><div class="val" id="kpiTrust">—</div></div>
+            </div>
+          </div>
+
+          <div class="row noPrint" style="margin-top:12px;">
+            <button id="btnAudit">Run Clarity Audit</button>
+            <button id="btnSimplify" class="primary">Simplify & Sell</button>
+            <button id="btnBuildStruct" class="ghost">Build Listing Structure</button>
+            <button id="btnPrint" class="primary">Print / Save PDF</button>
+          </div>
+          <div class="hint noPrint">Tip: Click an issue to jump to the highlighted sentence. Great for authority screenshots 💥</div>
+        </div>
+      </section>
+
+      <section class="card">
+        <div class="cardHeader noPrint">
+          <h2>2) Diagnosis & Output</h2>
+          <div class="row" style="justify-content:flex-end; flex:0;">
+            <button id="btnCopyRewrites">Copy Rewrites</button>
+            <button id="btnCopyStruct">Copy Structure</button>
+          </div>
+        </div>
+
+        <div class="body">
+          <div class="tabs noPrint">
+            <button class="tabBtn active" data-tab="issues">Issues Found</button>
+            <button class="tabBtn" data-tab="highlights">Highlighted Text</button>
+            <button class="tabBtn" data-tab="rewrites">Rewrites</button>
+            <button class="tabBtn" data-tab="structure">Structure</button>
+            <button class="tabBtn" data-tab="proof">Proof Builder</button>
+            <button class="tabBtn" data-tab="report">Report</button>
+          </div>
+
+          <div id="tab-issues" class="panel">
+            <div class="issues" id="issuesBox"><p class="muted">Run <b>Clarity Audit</b> to see diagnosis with fixes.</p></div>
+          </div>
+
+          <div id="tab-highlights" class="panel" style="display:none;">
+            <div class="analysis" id="analysisBox"><p class="muted">Run <b>Clarity Audit</b> to see highlighted text.</p></div>
+            <div class="legend">
+              <div class="legendItem"><mark class="passive">Passive</mark></div>
+              <div class="legendItem"><mark class="jargon">Jargon</mark></div>
+              <div class="legendItem"><mark class="long">Long</mark></div>
+              <div class="legendItem"><mark class="vague">Vague</mark></div>
+              <div class="legendItem"><mark class="conf">Confidence</mark></div>
+            </div>
+          </div>
+
+          <div id="tab-rewrites" class="panel" style="display:none;">
+            <div id="rewriteList" class="muted">No rewrites yet — click <b>Simplify & Sell</b>.</div>
+          </div>
+
+          <div id="tab-structure" class="panel" style="display:none;">
+            <div id="structOut" class="muted">Click <b>Build Listing Structure</b> to generate a layout.</div>
+          </div>
+
+          <div id="tab-proof" class="panel" style="display:none;">
+            <div id="proofOut" class="muted">Run <b>Clarity Audit</b> to see proof/trust suggestions.</div>
+          </div>
+
+          <div id="tab-report" class="panel" style="display:none;">
+            <div id="reportOut" class="muted">Run <b>Clarity Audit</b> then open this tab.</div>
+          </div>
+        </div>
+      </section>
+    </div>
+  </div>
+
+<script>
+/* ===== Lexicons ===== */
+const LEX = {
+  jargon: ["utilize","leverage","synergy","robust","seamless","cutting-edge","innovative","state-of-the-art","best-in-class","mission-critical","streamline","optimize","solution","value-added","world-class","scalable","next-generation","stakeholders","bandwidth","enable","maximize","transform","revolutionary","unparalleled"],
+  filler: ["very","really","actually","basically","just","literally","somewhat","quite","maybe","perhaps","amazing","awesome","great","stuff","things"],
+  vagueClaims: ["premium quality","high quality","best quality","top quality","best-in-class","amazing results","perfect for everyone","guaranteed results","ultimate","unmatched","unparalleled","game changer"],
+  confidenceDrops: ["may","might","can be","could","up to","typically","generally","varies","approximately","around","maybe","perhaps"],
+  benefitVerbs: ["helps","save","reduce","prevent","avoid","improve","increase","protect","support","boost","stay","keep","feel","enjoy","get","makes","lets you","so you can","means you"],
+  trustSignals: ["warranty","guarantee","returns","refund","tested","certified","review","rated","stars","money-back","30-day","90-day","safe","bpa-free","fda","ce","rohs","iso"]
+};
+
+const SPEC_TO_BENEFIT = [
+  { pattern: /water[-\\s]?resistant\\s*(\\d+)\\s*m?/i, make: ()=>`Perfect for heavy rain and accidental splashes.` },
+  { pattern: /\\b(ipx?[0-9]{1,2})\\b/i, make: ()=>`Built to handle water exposure (great for daily spills and splashes).` },
+  { pattern: /(\\d+)\\s*mah\\b/i, make: ()=>`Long-lasting battery so you can go longer without charging.` },
+  { pattern: /(\\d+)\\s*hz\\b/i, make: ()=>`Smoother motion for a more comfortable, premium viewing experience.` },
+  { pattern: /\\bips\\b/i, make: ()=>`Clearer, more accurate colors — looks good from different angles.` },
+  { pattern: /stainless\\s*steel/i, make: ()=>`Durable for everyday use — resists rust and wear.` },
+  { pattern: /\\b(bpa[-\\s]?free)\\b/i, make: ()=>`Safer for everyday use — no BPA worries.` },
+  { pattern: /(\\d+(?:\\.\\d+)?)\\s*(g|grams)\\b/i, make: ()=>`Lightweight and easy to carry all day.` },
+  { pattern: /(\\d+(?:\\.\\d+)?)\\s*(kg|kilograms)\\b/i, make: ()=>`Solid build that feels sturdy and reliable.` },
+  { pattern: /(\\d+(?:\\.\\d+)?)\\s*(mm|cm|inches|inch|in)\\b/i, make: ()=>`Designed to fit comfortably without feeling bulky.` },
+];
+
+const PASSIVE_PATTERNS = [
+  /\\b(is|are|was|were|be|been|being)\\s+\\w+(ed|en)\\b/i,
+  /\\b(is|are|was|were)\\s+being\\s+\\w+(ed|en)\\b/i
+];
+
+/* ===== UI ===== */
+const el = (id)=>document.getElementById(id);
+const inputText = el("inputText");
+const modeSelect = el("modeSelect");
+
+const scoreNum = el("scoreNum");
+const scoreFill = el("scoreFill");
+const scoreNote = el("scoreNote");
+const kpiFlesch = el("kpiFlesch");
+const kpiGrade = el("kpiGrade");
+const kpiBenefit = el("kpiBenefit");
+const kpiYou = el("kpiYou");
+const kpiTrust = el("kpiTrust");
+
+const issuesBox = el("issuesBox");
+const analysisBox = el("analysisBox");
+const rewriteList = el("rewriteList");
+const structOut = el("structOut");
+const proofOut = el("proofOut");
+const reportOut = el("reportOut");
+
+el("btnExample").addEventListener("click", loadExample);
+el("btnClear").addEventListener("click", clearAll);
+el("btnAudit").addEventListener("click", ()=>runAudit({withRewrites:false, withStruct:false}));
+el("btnSimplify").addEventListener("click", ()=>runAudit({withRewrites:true, withStruct:false}));
+el("btnBuildStruct").addEventListener("click", ()=>runAudit({withRewrites:true, withStruct:true}));
+el("btnCopyRewrites").addEventListener("click", copyRewrites);
+el("btnCopyStruct").addEventListener("click", copyStructure);
+el("btnPrint").addEventListener("click", ()=>window.print());
+
+document.querySelectorAll(".tabBtn").forEach(btn=>btn.addEventListener("click", ()=>activateTab(btn.dataset.tab)));
+function activateTab(tab){
+  document.querySelectorAll(".tabBtn").forEach(b=>b.classList.toggle("active", b.dataset.tab===tab));
+  ["issues","highlights","rewrites","structure","proof","report"].forEach(t=>{
+    el("tab-"+t).style.display = (t===tab) ? "" : "none";
+  });
+}
+
+/* ===== Helpers ===== */
+function escapeHtml(str){
+  return str.replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;").replaceAll("'","&#039;");
+}
+function normalize(text){ return (text||"").replace(/\\u00A0/g," ").replace(/\\s+/g," ").trim(); }
+function splitSentences(text){
+  const cleaned = normalize(text);
+  if(!cleaned) return [];
+  return cleaned.split(/(?<=[.!?])\\s+/).map(s=>s.trim()).filter(Boolean);
+}
+function wordsOf(str){ return (str.match(/[A-Za-z0-9’'-]+/g) || []); }
+function lower(str){ return (str||"").toLowerCase(); }
+function clamp(n,min,max){ return Math.max(min, Math.min(max, n)); }
+
+function countSyllables(word){
+  word = lower(word).replace(/[^a-z]/g,"");
+  if(!word) return 0;
+  if(word.length <= 3) return 1;
+  word = word.replace(/(?:e$)/,"");
+  const groups = word.match(/[aeiouy]+/g);
+  return groups ? Math.max(1, groups.length) : 1;
+}
+function fleschReadingEase(text){
+  const sentences = splitSentences(text);
+  const words = wordsOf(text);
+  if(!sentences.length || !words.length) return null;
+  let syllables = 0;
+  for(const w of words) syllables += countSyllables(w);
+  const W = words.length, S = sentences.length, SY = syllables;
+  const score = 206.835 - 1.015*(W/S) - 84.6*(SY/W);
+  return Math.max(-30, Math.min(130, score));
+}
+function gradeEstimateFromFlesch(f){
+  if(f===null) return null;
+  if(f >= 90) return "5th grade";
+  if(f >= 80) return "6th grade";
+  if(f >= 70) return "7th grade";
+  if(f >= 60) return "8th–9th grade";
+  if(f >= 50) return "10th–12th grade";
+  if(f >= 30) return "College";
+  return "Advanced";
+}
+
+function passiveHits(sentence){
+  let hits = 0;
+  for(const rx of PASSIVE_PATTERNS){
+    if(rx.test(sentence)) hits++;
+  }
+  return hits;
+}
+function isLongOrComplex(sentence){
+  const words = wordsOf(sentence);
+  const long = words.length >= 22;
+  const longWordCount = words.filter(w => w.length >= 12).length;
+  const complex = longWordCount >= 3;
+  return {long, complex};
+}
+function containsSpecDensity(sentence){
+  const digits = (sentence.match(/\\d/g) || []).length;
+  const units = (sentence.match(/\\b(mm|cm|in|inch|inches|oz|lb|lbs|g|grams|kg|ml|l|liters|mah|hz|°c|°f|ipx?\\d+)\\b/ig) || []).length;
+  const caps = (sentence.match(/\\b[A-Z]{2,}\\b/g) || []).length;
+  return (digits >= 3) || (units >= 2) || (caps >= 2);
+}
+function benefitSignals(sentence){
+  const t = lower(sentence);
+  let hits = 0;
+  for(const b of LEX.benefitVerbs){ if(t.includes(b)) hits++; }
+  if(/\\bso you can\\b/i.test(sentence)) hits += 2;
+  if(/\\bmeans you\\b/i.test(sentence)) hits += 2;
+  return hits;
+}
+function youLanguageRate(text){
+  const words = wordsOf(text);
+  if(!words.length) return 0;
+  const youCount = (lower(text).match(/\\b(you|your|yours)\\b/g) || []).length;
+  return youCount / words.length;
+}
+function trustSignalsCount(text){
+  const t = lower(text);
+  let hits = 0;
+  for(const s of LEX.trustSignals){
+    const rx = new RegExp(`\\\\b${s.replace(/[.*+?^${}()|[\\]\\\\]/g,'\\\\$&')}\\\\b`, "g");
+    const m = t.match(rx);
+    if(m) hits += m.length;
+  }
+  const numbers = (text.match(/\\b\\d+(\\.\\d+)?\\b/g) || []).length;
+  if(numbers >= 3) hits += 1;
+  return hits;
+}
+function benefitRatio(sentences){
+  if(!sentences.length) return 0;
+  let benefit = 0, feature = 0;
+  for(const s of sentences){
+    if(benefitSignals(s) > 0) benefit += 1;
+    if(containsSpecDensity(s)) feature += 1;
+  }
+  const denom = Math.max(1, benefit + feature);
+  return benefit / denom;
+}
+function countLex(text, list){
+  const t = lower(text);
+  let count = 0;
+  for(const item of list){
+    const rx = new RegExp(`\\\\b${item.replace(/[.*+?^${}()|[\\]\\\\]/g,'\\\\$&')}\\\\b`, "g");
+    const m = t.match(rx);
+    if(m) count += m.length;
+  }
+  return count;
+}
+
+function computeCompositeScores(text, sentences){
+  const words = wordsOf(text);
+  const flesch = fleschReadingEase(text);
+  const grade = gradeEstimateFromFlesch(flesch);
+
+  const readability01 = flesch === null ? 0 : clamp((flesch - 20) / 80, 0, 1);
+  const youRate = youLanguageRate(text);
+  const you01 = clamp(youRate / 0.02, 0, 1);
+  const trust = trustSignalsCount(text);
+  const trust01 = clamp(trust / 6, 0, 1);
+  const bRatio = benefitRatio(sentences);
+
+  let passiveCount=0,longCount=0,jargonCount=0,fillerCount=0,vagueCount=0,confDropCount=0;
+  for(const s of sentences){
+    passiveCount += passiveHits(s);
+    const lc = isLongOrComplex(s);
+    if(lc.long || lc.complex) longCount += 1;
+    jargonCount += countLex(s, LEX.jargon);
+    fillerCount += countLex(s, LEX.filler);
+    vagueCount += LEX.vagueClaims.filter(v => lower(s).includes(v)).length;
+    confDropCount += countLex(s, LEX.confidenceDrops);
+  }
+  const passive01 = clamp(passiveCount / Math.max(1, sentences.length*0.8), 0, 1);
+  const long01 = clamp(longCount / Math.max(1, sentences.length), 0, 1);
+  const jargon01 = clamp(jargonCount / Math.max(1, words.length/40), 0, 1);
+  const filler01 = clamp(fillerCount / Math.max(1, words.length/35), 0, 1);
+  const vague01 = clamp(vagueCount / Math.max(1, sentences.length/3), 0, 1);
+  const conf01 = clamp(confDropCount / Math.max(1, sentences.length), 0, 1);
+
+  const positive = 0.38*readability01 + 0.20*bRatio + 0.16*you01 + 0.14*trust01 + 0.12*(1 - long01);
+  const negative = 0.22*passive01 + 0.18*jargon01 + 0.12*filler01 + 0.10*vague01 + 0.08*conf01 + 0.10*long01;
+
+  const raw = positive - negative;
+  const clarity = clamp(Math.round(100 * (0.15 + raw)), 0, 100);
+
+  return { clarity, flesch, grade, benefitRatio:bRatio, youRate, trustSignals:trust,
+    penalties:{passiveCount,longCount,jargonCount,fillerCount,vagueCount,confDropCount} };
+}
+
+/* ===== Issues ===== */
+function makeId(){ return "i_"+Math.random().toString(16).slice(2)+"_"+Date.now().toString(16); }
+function issueObj({type,severity,sentenceIndex,sentenceText,why,fix}){ return {id:makeId(),type,severity,sentenceIndex,sentenceText,why,fix}; }
+
+function findTermsInSentence(sentence, terms){
+  const t = lower(sentence);
+  return terms.filter(x => new RegExp(`\\\\b${x.replace(/[.*+?^${}()|[\\]\\\\]/g,'\\\\$&')}\\\\b`, "i").test(t)).slice(0, 8);
+}
+function findPhrasesInSentence(sentence, phrases){
+  const t = lower(sentence);
+  return phrases.filter(p => t.includes(p)).slice(0, 6);
+}
+
+function detectIssues(text, sentences, metrics){
+  const issues = [];
+  sentences.forEach((s, idx)=>{
+    const lc = isLongOrComplex(s);
+    const passive = passiveHits(s) > 0;
+    const jargonHits = findTermsInSentence(s, LEX.jargon);
+    const fillerHits = findTermsInSentence(s, LEX.filler);
+    const vaguePhrases = findPhrasesInSentence(s, LEX.vagueClaims);
+    const confTerms = findTermsInSentence(s, LEX.confidenceDrops);
+    const featureDump = containsSpecDensity(s);
+
+    if(lc.long || lc.complex){
+      issues.push(issueObj({type:"Long/Complex Sentence",severity:"med",sentenceIndex:idx,sentenceText:s,
+        why:"Long, dense sentences increase drop-offs — buyers skim and bounce.",
+        fix:"Split into 2 lines: benefit first, then the proof/spec."}));
+    }
+    if(passive){
+      issues.push(issueObj({type:"Passive Voice",severity:"med",sentenceIndex:idx,sentenceText:s,
+        why:"Passive voice sounds distant and ‘corporate.’ It lowers confidence.",
+        fix:"Rewrite in active benefit language (Built to…, Helps you…, Keeps…)."}));
+    }
+    if(jargonHits.length){
+      issues.push(issueObj({type:"Jargon",severity:"med",sentenceIndex:idx,sentenceText:s,
+        why:"Corporate-speak makes buyers work harder to understand value.",
+        fix:"Replace with plain words: “utilize”→“use”, “optimize”→“improve”."}));
+    }
+    if(fillerHits.length >= 2){
+      issues.push(issueObj({type:"Filler Words",severity:"low",sentenceIndex:idx,sentenceText:s,
+        why:"Filler words weaken claims and reduce credibility.",
+        fix:"Remove ‘very/really/actually’ and add specific proof instead."}));
+    }
+    if(vaguePhrases.length){
+      issues.push(issueObj({type:"Vague Claim",severity:"high",sentenceIndex:idx,sentenceText:s,
+        why:"Vague claims don’t build trust. Buyers want evidence.",
+        fix:"Swap with proof: material grade, dimensions, warranty, test method, compatibility."}));
+    }
+    if(confTerms.length >= 2){
+      issues.push(issueObj({type:"Confidence Drop",severity:"med",sentenceIndex:idx,sentenceText:s,
+        why:"Too many ‘may/might/could’ phrases reduce certainty and desire.",
+        fix:"Be precise; add conditions honestly (e.g., ‘in normal use…’)."}));
+    }
+    if(featureDump){
+      issues.push(issueObj({type:"Feature Dump",severity:"high",sentenceIndex:idx,sentenceText:s,
+        why:"Spec-heavy lines bury the benefit. Buyers don’t connect specs to outcomes.",
+        fix:"Translate spec → result first, then keep the spec as proof in parentheses."}));
+    }
+  });
+
+  if(metrics.benefitRatio < 0.45){
+    issues.push(issueObj({type:"Low Benefit Framing",severity:"high",sentenceIndex:0,sentenceText:sentences[0]||"",
+      why:"This reads like features/specs. Buyers need outcomes and use-cases first.",
+      fix:"Add 3–5 benefit bullets (what it helps the buyer do/feel/avoid)."}));
+  }
+  if(metrics.trustSignals <= 1){
+    issues.push(issueObj({type:"Missing Trust Signals",severity:"high",sentenceIndex:0,sentenceText:sentences[0]||"",
+      why:"Without proof (numbers, warranty, returns, materials), buyers hesitate.",
+      fix:"Add measurable specs + return/warranty line + 1 proof statement (if true)."}));
+  }
+  if(metrics.youRate < 0.007){
+    issues.push(issueObj({type:"Low Customer Focus",severity:"med",sentenceIndex:0,sentenceText:sentences[0]||"",
+      why:"If it’s all ‘we/it/this product,’ buyers don’t feel spoken to.",
+      fix:"Add ‘you/your’ benefits: “So you can…”, “Helps you…”"}));
+  }
+
+  const sevRank = {high:0, med:1, low:2};
+  issues.sort((a,b)=> (sevRank[a.severity]-sevRank[b.severity]) || (a.sentenceIndex-b.sentenceIndex));
+  return issues.slice(0, 18);
+}
+
+/* ===== Highlighting ===== */
+function highlightSentence(sentence, flags){
+  let html = escapeHtml(sentence);
+  for(const term of flags.jargonTerms){
+    const rx = new RegExp(`\\\\b${term.replace(/[.*+?^${}()|[\\]\\\\]/g,'\\\\$&')}\\\\b`, "ig");
+    html = html.replace(rx, (m)=>`<mark class="jargon">${escapeHtml(m)}</mark>`);
+  }
+  for(const phrase of flags.vaguePhrases){
+    const rx = new RegExp(phrase.replace(/[.*+?^${}()|[\\]\\\\]/g,'\\\\$&'), "ig");
+    html = html.replace(rx, (m)=>`<mark class="vague">${escapeHtml(m)}</mark>`);
+  }
+  for(const term of flags.confTerms){
+    const rx = new RegExp(`\\\\b${term.replace(/[.*+?^${}()|[\\]\\\\]/g,'\\\\$&')}\\\\b`, "ig");
+    html = html.replace(rx, (m)=>`<mark class="conf">${escapeHtml(m)}</mark>`);
+  }
+  if(flags.passive){
+    for(const rx of PASSIVE_PATTERNS){
+      html = html.replace(rx, (m)=>`<mark class="passive">${escapeHtml(m)}</mark>`);
+    }
+  }
+  if(flags.long) html = `<mark class="long">${html}</mark>`;
+  return html;
+}
+
+/* ===== Rewrite modes ===== */
+const MODE = {
+  friendly: { lead:["In plain English:","Simple version:","What this means for you:"], verbs:["helps you","makes it easy to","lets you","keeps you"], tone:(s)=>s },
+  premium: { lead:["Refined benefit framing:","Premium clarity version:","Polished version:"], verbs:["enables you to","delivers","ensures you get","keeps things"], tone:(s)=>s.replace(/\\bvery\\b/ig,"highly").replace(/\\breally\\b/ig,"truly") },
+  bold: { lead:["No fluff:","Straight to the point:","Buyers care about this:"], verbs:["gets you","gives you","keeps","stops"], tone:(s)=>s },
+  etsy: { lead:["Made for real life:","Why you’ll love it:","Story-style clarity:"], verbs:["makes your day easier by","helps you feel confident because it","keeps things simple — it"], tone:(s)=>s },
+  shopify: { lead:["Benefits (fast scan):","Quick buyer benefits:","Conversion bullet:"], verbs:["Helps you","Keeps","Gives you","Designed to"], tone:(s)=>s }
+};
+
+function specToBenefit(sentence){
+  for(const rule of SPEC_TO_BENEFIT){
+    const m = sentence.match(rule.pattern);
+    if(m) return rule.make(...m.slice(1));
+  }
+  return null;
+}
+
+function simplifySentence(sentence, modeKey){
+  const mode = MODE[modeKey] || MODE.friendly;
+  const s0 = normalize(sentence);
+
+  const specBenefit = specToBenefit(s0);
+  if(specBenefit){
+    return modeKey==="shopify" ? `• ${mode.tone(specBenefit)}` : mode.tone(specBenefit);
+  }
+
+  let s = s0
+    .replace(/\\b(in order to|as a means to|with respect to|it should be noted that|in terms of)\\b/ig, "")
+    .replace(/\\b(utilize|leverage)\\b/ig, "use")
+    .replace(/\\b(optimize)\\b/ig, "improve")
+    .replace(/\\s+/g," ")
+    .trim();
+
+  s = s.replace(/\\b(this|it)\\s+(is|was)\\s+designed\\s+to\\b/ig, "Built to");
+  s = s.replace(/\\b(is|are)\\s+ideal\\s+for\\b/ig, "Works great for");
+
+  const specy = containsSpecDensity(s);
+  const hasNumbers = /\\b\\d+(\\.\\d+)?\\b/.test(s);
+
+  const lead = mode.lead[Math.floor(Math.random()*mode.lead.length)];
+  const verb = mode.verbs[Math.floor(Math.random()*mode.verbs.length)];
+
+  if(modeKey === "shopify"){
+    if(specy || hasNumbers){
+      return `• ${specToBenefit(s0) || "Clear benefits without technical overload."} (Specs: ${s.replace(/\\.$/,"")})`;
+    }
+    return `• ${mode.tone(s.replace(/\\.$/,""))}.`;
+  }
+
+  if(specy || hasNumbers){
+    const benefit = specToBenefit(s0) || `This ${verb} understand the value fast.`;
+    return mode.tone(`${lead} ${benefit} (Details: ${s.replace(/\\.$/,"")})`);
+  }
+
+  const cleaned = s.replace(/\\.$/,"");
+  return mode.tone(`${lead} It ${verb} ${cleaned.charAt(0).toLowerCase()+cleaned.slice(1)}.`);
+}
+
+function rankRewriteTargets(sentences){
+  const ranked = sentences.map((s, idx) => {
+    const jargon = countLex(s, LEX.jargon);
+    const filler = countLex(s, LEX.filler);
+    const passive = passiveHits(s);
+    const lc = isLongOrComplex(s);
+    const vague = LEX.vagueClaims.filter(v => lower(s).includes(v)).length;
+    const conf = countLex(s, LEX.confidenceDrops);
+    const featDump = containsSpecDensity(s) ? 1 : 0;
+    const score = (lc.long?3:0) + (lc.complex?2:0) + passive*2 + jargon*2 + filler + vague*3 + conf + featDump*2;
+    return { idx, s, score };
+  }).filter(x => x.score > 0);
+  ranked.sort((a,b)=> b.score - a.score);
+  return ranked.slice(0, 6);
+}
+
+/* ===== Structure + Proof ===== */
+function extractSpecs(text){
+  const specs = [];
+  for(const s of splitSentences(text)){
+    if(containsSpecDensity(s)) specs.push(s);
+  }
+  return specs.slice(0, 6);
+}
+function guessProductName(text){
+  const s = splitSentences(text)[0] || "";
+  const words = wordsOf(s).filter(w => !["this","that","the","and","or","with","for","to","a","an","of","in"].includes(lower(w)));
+  return words.slice(0, 6).join(" ") || "This product";
+}
+function detectObjections(text){
+  const found = [];
+  if(/\\b(size|sizing|measure|dimensions)\\b/i.test(text)) found.push("size");
+  if(/\\b(compatible|works with|fit for|for iphone|for samsung|android)\\b/i.test(text)) found.push("compat");
+  if(/\\b(wash|clean|care|maintenance)\\b/i.test(text)) found.push("care");
+  if(/\\b(shipping|delivery|dispatch)\\b/i.test(text)) found.push("shipping");
+  if(/\\b(return|refund|warranty|guarantee)\\b/i.test(text)) found.push("returns");
+  return found;
+}
+function buildStructure(text, modeKey){
+  const sentences = splitSentences(text);
+  const product = guessProductName(text);
+  const specs = extractSpecs(text);
+
+  const targets = rankRewriteTargets(sentences);
+  const bullets = [];
+  const used = new Set();
+  for(const t of targets){
+    const b = specToBenefit(t.s) || simplifySentence(t.s, "shopify").replace(/^•\\s*/,"");
+    const key = lower(b).slice(0, 40);
+    if(!used.has(key)){
+      bullets.push(b.startsWith("•") ? b : "• " + b.replace(/\\.$/,"."));
+      used.add(key);
+    }
+    if(bullets.length >= 5) break;
+  }
+  while(bullets.length < 3){
+    bullets.push("• Easy to understand at a glance — no confusing jargon.");
+  }
+
+  const useCases = ["• Daily use (grab-and-go)","• Busy buyers who want quick clarity","• Gifts (easy to explain why it’s valuable)"];
+  const included = [`• 1× ${product}`,"• Quick-start / care notes (if relevant)"];
+  const obs = detectObjections(text);
+  const faq = [];
+  if(obs.includes("size")) faq.push("Q: What size should I choose?\\nA: Use the sizing notes and compare to an item you already own.");
+  if(obs.includes("compat")) faq.push("Q: Is it compatible?\\nA: Check the compatibility list in the specs section before ordering.");
+  if(obs.includes("care")) faq.push("Q: How do I care for it?\\nA: Follow the simple care steps so it stays looking new.");
+  if(obs.includes("shipping")) faq.push("Q: How fast is shipping?\\nA: Delivery times depend on location—use the shop’s shipping estimates.");
+  if(!faq.length) faq.push("Q: Will this work for me?\\nA: If you want the main benefit described above, you’re the right buyer.");
+
+  const specSection = specs.length ? specs.map(s=>`• ${s.replace(/\\.$/,"")}`).join("\\n")
+                                  : "• (Add measurable details: size, material, compatibility, warranty, etc.)";
+  const header = (modeKey==="etsy") ? `✨ ${product} — made for real life\\n` : `✅ ${product} — clarity-first listing\\n`;
+
+  return `${header}
+WHY YOU’LL LIKE IT
+${bullets.join("\\n")}
+
+BEST FOR
+${useCases.join("\\n")}
+
+WHAT YOU GET
+${included.join("\\n")}
+
+DETAILS / SPECS
+${specSection}
+
+FAQ
+${faq.join("\\n\\n")}
+`;
+}
+function buildProofSuggestions(text, trustCount){
+  const suggestions = [];
+  if(trustCount <= 1){
+    suggestions.push("Add a clear return/warranty line (even if simple). Example: “Hassle-free returns within 14 days.”");
+    suggestions.push("Add at least 3 measurable details (material, size, weight, compatibility). Numbers build trust.");
+    suggestions.push("Add 1 proof statement: “Tested for daily use” / “Double-stitched seams” / “Food-safe, BPA-free.” (Only if true.)");
+  } else {
+    suggestions.push("You already have some trust signals. Make them skimmable: add a short “Trust” bullet block.");
+  }
+  for(const phrase of LEX.vagueClaims){
+    if(lower(text).includes(phrase)){
+      suggestions.push(`Replace vague claim “${phrase}” with proof (material grade, dimensions, warranty, certification).`);
+      break;
+    }
+  }
+  const obs = detectObjections(text);
+  if(!obs.includes("compat")) suggestions.push("If compatibility matters, add a compatibility line (reduces returns).");
+  if(!obs.includes("size")) suggestions.push("If sizing matters, add sizing guidance + a simple measurement reference.");
+  if(!obs.includes("care")) suggestions.push("Add 1–2 care instructions (buyers trust sellers who reduce post-purchase anxiety).");
+  suggestions.push("Optional: add a review highlight line (if you have it). Example: “Customers say it feels sturdy and easy to use.”");
+  return suggestions;
+}
+
+/* ===== Rendering ===== */
+function flash(node){
+  node.style.outline = "2px solid rgba(255,191,60,.55)";
+  node.style.borderRadius = "12px";
+  setTimeout(()=> node.style.outline = "", 900);
+}
+
+function renderIssues(issues){
+  if(!issues.length){
+    issuesBox.innerHTML = `<p class="muted">No major issues detected — try a longer description for deeper analysis.</p>`;
+    return;
+  }
+  issuesBox.innerHTML = issues.map((iss)=>{
+    const sevClass = iss.severity === "high" ? "sevHigh" : iss.severity === "med" ? "sevMed" : "sevLow";
+    const anchor = `s_${iss.sentenceIndex}`;
+    return `
+      <div class="issue" data-anchor="${anchor}">
+        <div class="issueTop">
+          <p class="issueTitle">${escapeHtml(iss.type)}</p>
+          <span class="badge ${sevClass}">${escapeHtml(iss.severity.toUpperCase())}</span>
+        </div>
+        <div class="tiny">Sentence #${iss.sentenceIndex + 1}</div>
+        <p class="issueDesc"><b>Why it hurts:</b> ${escapeHtml(iss.why)}</p>
+        <p class="issueFix"><b>Fix:</b> ${escapeHtml(iss.fix)}</p>
+      </div>
+    `;
+  }).join("");
+
+  issuesBox.querySelectorAll(".issue").forEach(card=>{
+    card.addEventListener("click", ()=>{
+      activateTab("highlights");
+      const target = document.getElementById(card.dataset.anchor);
+      if(target){ target.scrollIntoView({behavior:"smooth", block:"center"}); flash(target); }
+    });
+  });
+}
+
+function renderHighlights(sentences){
+  const html = sentences.map((s, idx)=>{
+    const flags = {
+      jargonTerms: new Set(findTermsInSentence(s, LEX.jargon)),
+      vaguePhrases: findPhrasesInSentence(s, LEX.vagueClaims),
+      confTerms: new Set(findTermsInSentence(s, LEX.confidenceDrops)),
+      passive: passiveHits(s) > 0,
+      long: (isLongOrComplex(s).long || isLongOrComplex(s).complex)
+    };
+    return `<p id="s_${idx}">${highlightSentence(s, flags)}</p>`;
+  }).join("");
+  analysisBox.innerHTML = html;
+}
+
+function renderRewrites(rewrites){
+  if(!rewrites.length){
+    rewriteList.innerHTML = `<div class="muted">No strong rewrite targets found yet. Try a longer description.</div>`;
+    return;
+  }
+  rewriteList.innerHTML = rewrites.map(r => `
+    <div class="rewriteItem">
+      <div class="old"><b>Before:</b> ${escapeHtml(r.before)}</div>
+      <div class="new"><b>After:</b> ${escapeHtml(r.after)}</div>
+    </div>
+  `).join("");
+}
+
+function renderReport(text, metrics, issues, rewrites, structure, proofSuggestions){
+  const issueLines = issues.slice(0, 8).map(i=>`• ${i.type} (${i.severity}) — ${i.fix}`).join("\\n") || "• No major issues detected.";
+  const rewriteLines = rewrites.length ? rewrites.slice(0,4).map(r=>`BEFORE: ${r.before}\\nAFTER: ${r.after}`).join("\\n\\n") : "No rewrites generated yet.";
+  const structText = structure.trim().length ? structure : "Not generated yet.";
+  const proofText = proofSuggestions.length ? "• " + proofSuggestions.join("\\n• ") : "No proof suggestions yet.";
+
+  return `
+    <div>
+      <div style="display:flex; justify-content:space-between; gap:12px; flex-wrap:wrap;">
+        <div>
+          <div style="font-weight:800; font-size:14px;">Clarity Audit Report</div>
+          <div class="muted" style="margin-top:6px;">Print / Save PDF anytime.</div>
+        </div>
+        <div class="mini" style="min-width:240px;">
+          <div class="kpi"><div class="name">Clarity</div><div class="val">${metrics.clarity}/100</div></div>
+          <div class="kpi"><div class="name">Flesch</div><div class="val">${metrics.flesch===null?"—":metrics.flesch.toFixed(1)}</div></div>
+          <div class="kpi"><div class="name">Grade</div><div class="val">${metrics.grade||"—"}</div></div>
+          <div class="kpi"><div class="name">Benefit ratio</div><div class="val">${Math.round(metrics.benefitRatio*100)}%</div></div>
+        </div>
+      </div>
+      <div class="divider"></div>
+      <div style="font-weight:800; font-size:13px;">Top Issues & Fixes</div>
+      <div class="codeLike" style="margin-top:8px;">${escapeHtml(issueLines)}</div>
+      <div class="divider"></div>
+      <div style="font-weight:800; font-size:13px;">Before → After Rewrites</div>
+      <div class="codeLike" style="margin-top:8px;">${escapeHtml(rewriteLines)}</div>
+      <div class="divider"></div>
+      <div style="font-weight:800; font-size:13px;">Recommended Structure</div>
+      <div class="codeLike" style="margin-top:8px;">${escapeHtml(structText)}</div>
+      <div class="divider"></div>
+      <div style="font-weight:800; font-size:13px;">Proof & Trust Builder</div>
+      <div class="codeLike" style="margin-top:8px;">${escapeHtml(proofText)}</div>
+    </div>
+  `;
+}
+
+/* ===== Main ===== */
+function scoreMessage(s){
+  if(s >= 85) return "Excellent clarity — buyers can scan and understand fast.";
+  if(s >= 70) return "Solid clarity — a few fixes will lift conversions.";
+  if(s >= 55) return "Mid clarity — confusion may cause drop-offs.";
+  if(s >= 40) return "Low clarity — buyers will struggle to see value quickly.";
+  return "Very low clarity — rewrite for benefits first, specs second.";
+}
+
+function runAudit({withRewrites, withStruct}){
+  const text = normalize(inputText.value);
+  const sentences = splitSentences(text);
+  if(!text || !sentences.length){
+    alert("Paste a description first 🙂");
+    return;
+  }
+
+  const metrics = computeCompositeScores(text, sentences);
+  scoreNum.textContent = String(metrics.clarity);
+  scoreFill.style.width = `${metrics.clarity}%`;
+  scoreNote.textContent = scoreMessage(metrics.clarity);
+
+  kpiFlesch.textContent = metrics.flesch === null ? "—" : metrics.flesch.toFixed(1);
+  kpiGrade.textContent = metrics.grade || "—";
+  kpiBenefit.textContent = `${Math.round(metrics.benefitRatio*100)}%`;
+  kpiYou.textContent = `${(metrics.youRate*100).toFixed(1)}%`;
+  kpiTrust.textContent = String(metrics.trustSignals);
+
+  const issues = detectIssues(text, sentences, metrics);
+  renderIssues(issues);
+  renderHighlights(sentences);
+
+  let rewrites = [];
+  if(withRewrites){
+    const targets = rankRewriteTargets(sentences);
+    const mode = modeSelect.value;
+    rewrites = targets.map(t => ({ before: t.s, after: simplifySentence(t.s, mode) }));
+    renderRewrites(rewrites);
+  } else {
+    rewriteList.innerHTML = `<div class="muted">No rewrites yet — click <b>Simplify & Sell</b>.</div>`;
+  }
+
+  let structure = "";
+  if(withStruct){
+    structure = buildStructure(text, modeSelect.value);
+    structOut.innerHTML = `<div class="codeLike" id="structCode">${escapeHtml(structure)}</div>`;
+  } else {
+    structOut.innerHTML = `<div class="muted">Click <b>Build Listing Structure</b> to generate a layout.</div>`;
+  }
+
+  const proofSuggestions = buildProofSuggestions(text, metrics.trustSignals);
+  proofOut.innerHTML = `<div class="codeLike" id="proofCode">• ${escapeHtml(proofSuggestions.join("\\n• "))}</div>`;
+
+  reportOut.innerHTML = renderReport(text, metrics, issues, rewrites, structure, proofSuggestions);
+
+  activateTab("issues");
+}
+
+/* ===== Copy ===== */
+function copyRewrites(){
+  const items = rewriteList.querySelectorAll(".rewriteItem .new");
+  if(!items.length){
+    alert("No rewrites to copy yet. Click “Simplify & Sell” first.");
+    return;
+  }
+  const lines = Array.from(items).map(el => el.textContent.replace(/^After:\\s*/i,"").trim());
+  navigator.clipboard.writeText(lines.join("\\n")).then(()=>alert("Copied rewrites ✅")).catch(()=>alert("Copy failed."));
+}
+function copyStructure(){
+  const node = document.getElementById("structCode");
+  if(!node){
+    alert("No structure generated yet. Click “Build Listing Structure” first.");
+    return;
+  }
+  navigator.clipboard.writeText(node.textContent).then(()=>alert("Copied structure ✅")).catch(()=>alert("Copy failed."));
+}
+
+/* ===== Utility ===== */
+function clearAll(){
+  inputText.value = "";
+  scoreNum.textContent = "—";
+  scoreFill.style.width = "0%";
+  scoreNote.textContent = "Cleared. Paste a description to begin 🙂";
+  kpiFlesch.textContent = "—"; kpiGrade.textContent = "—"; kpiBenefit.textContent = "—"; kpiYou.textContent = "—"; kpiTrust.textContent = "—";
+  issuesBox.innerHTML = `<p class="muted">Run <b>Clarity Audit</b> to see diagnosis with fixes.</p>`;
+  analysisBox.innerHTML = `<p class="muted">Run <b>Clarity Audit</b> to see highlighted text.</p>`;
+  rewriteList.innerHTML = `<div class="muted">No rewrites yet — click <b>Simplify & Sell</b>.</div>`;
+  structOut.innerHTML = `<div class="muted">Click <b>Build Listing Structure</b> to generate a layout.</div>`;
+  proofOut.innerHTML = `<div class="muted">Run <b>Clarity Audit</b> to see proof/trust suggestions.</div>`;
+  reportOut.innerHTML = `<div class="muted">Run <b>Clarity Audit</b> then open this tab.</div>`;
+  activateTab("issues");
+}
+function loadExample(){
+  inputText.value =
+`This next-generation bottle is designed to optimize hydration outcomes with a robust, best-in-class form factor.
+Water-resistant 50m rating ensures performance in adverse conditions.
+The unit is engineered utilizing premium stainless steel and has been tested for mission-critical durability.
+Capacity: 950mL. BPA-free. Shipping varies. Results may differ.`;
+  runAudit({withRewrites:false, withStruct:false});
+}
+</script>
+</body>
+</html>
